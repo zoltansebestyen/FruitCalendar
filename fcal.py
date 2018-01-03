@@ -6,21 +6,32 @@ import calendar
 import xml.etree.ElementTree as etree
 import sys
 
-def get_next_name(names, last_name):
-    """Generates a cyclic list of names from the list given"""
-    if last_name is not None and \
-        last_name in names:
-        offset = names.index(last_name)
+NO_NAME_LABEL="-"
+
+def get_next_name(names, last_name_used, day_offset=0, month_length=31):
+    """Generates a cyclic list of names from the list given
+        names: list of names to generate
+        last_name_used: last name used last month, we'll skip names until this one
+    """
+    if last_name_used is not None:
+        if last_name_used in names:
+            name_offset = names.index(last_name_used)
+        else:
+            raise Exception("No such name %s" % last_name_used)
     else:
-        offset = 0
+        name_offset = 0
 
-    # Should be 31 at most
-    for char in range(31):
-        yield str(names[(char + offset) % len(names)])
+    # Skip first day_offset days if needed
+    for _ in range(day_offset):
+        yield NO_NAME_LABEL
 
-    # FIXME to circumvent iteration errors
-    for char in range(100):
-        yield "-"
+    # Generate list of names
+    for position in range(month_length - day_offset):
+        yield str(names[(position + name_offset) % len(names)])
+
+    # Fill in the first few days of the next month
+    for _ in range(100):
+        yield NO_NAME_LABEL
 
 def main():
     """High level module of the code"""
@@ -43,15 +54,24 @@ def main():
 
     root = etree.fromstring(html_str)
     for elem in root.findall("*//td"):
-        # if elem.get("class") != "tue":
-        #     continue
-        # elem.text += "!"
 
         br = etree.SubElement(elem, "br")
         br.tail = next(next_names)
-        # print(elem.text + str(br.tail))
 
-    print(etree.tostring(root, encoding='utf-8'))
+    sys.stdout.write(
+"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<title>Page Title</title>
+</head>
+<body>""")
+    sys.stdout.flush()
+    sys.stdout.buffer.write(etree.tostring(root, encoding='utf-8'))
+    sys.stdout.write(
+"""</body>
+</html>""")
+    sys.stdout.flush()
 
 if __name__ == '__main__':
     main()
