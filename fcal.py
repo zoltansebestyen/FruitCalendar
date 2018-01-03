@@ -57,16 +57,6 @@ def main():
 
     root = etree.fromstring(html_str)
 
-    # parent_map = dict((c, p) for p in root.getiterator() for c in p)
-    #
-    # Does not remove next month
-    # elems = (root.findall("*//td"))
-    # elems.extend(root.findall("*//th"))
-    #
-    # for elem in elems:
-    #     if elem.get('class') in ['sun', 'sat']:
-    #         parent_map[elem].remove(elem)
-
     for elem in root.findall("tr"):
         children = elem.getchildren()
         if len(children) == 1:
