@@ -56,10 +56,29 @@ def main():
     html_str = html_str.replace("&nbsp;", " ")
 
     root = etree.fromstring(html_str)
-    for elem in root.findall("*//td"):
 
-        br = etree.SubElement(elem, "br")
-        br.tail = next(next_names)
+    # parent_map = dict((c, p) for p in root.getiterator() for c in p)
+    #
+    # Does not remove next month
+    # elems = (root.findall("*//td"))
+    # elems.extend(root.findall("*//th"))
+    #
+    # for elem in elems:
+    #     if elem.get('class') in ['sun', 'sat']:
+    #         parent_map[elem].remove(elem)
+
+    for elem in root.findall("tr"):
+        children = elem.getchildren()
+        if len(children) == 1:
+            continue
+
+        elem.remove(children[calendar.SUNDAY])
+        elem.remove(children[calendar.SATURDAY])
+
+    for elem in root.findall("*//td"):
+        if elem.get('class') != 'noday':
+            br = etree.SubElement(elem, "br")
+            br.tail = next(next_names)
 
     sys.stdout.write(
 """<!DOCTYPE html>
