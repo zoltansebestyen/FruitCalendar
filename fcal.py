@@ -5,6 +5,8 @@ with the name of a member of the group for each work day"""
 import calendar
 import xml.etree.ElementTree as etree
 import sys
+import locale
+
 
 NO_NAME_LABEL="-"
 
@@ -44,7 +46,8 @@ def main():
     if len(sys.argv) > 1:
         last_name_of_last_month = sys.argv[1]
 
-    fruit_calendar = calendar.HTMLCalendar(calendar.MONDAY)
+    loc = locale.getlocale() # get current locale
+    fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
     next_names = get_next_name(nevek, last_name_of_last_month)
 
     html_str = fruit_calendar.formatmonth(2018, 1)
