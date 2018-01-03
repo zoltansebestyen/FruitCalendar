@@ -1,45 +1,57 @@
+#!/usr/bin/env python3
+"""This little tool aims to generate a printable 'Fruit Calendar'
+with the name of a member of the group for each work day"""
+
 import calendar
 import xml.etree.ElementTree as etree
 import sys
 
-nevek = [line.rstrip('\n') for line in open('nevek.txt')]
-
-last_name_of_last_month = None
-
-if len(sys.argv) > 1:
-    last_name_of_last_month = sys.argv[1]
-
-def get_next_name():
-    if last_name_of_last_month is not None and \
-        last_name_of_last_month in nevek:
-        offset = nevek.index(last_name_of_last_month)
+def get_next_name(names, last_name):
+    """Generates a cyclic list of names from the list given"""
+    if last_name is not None and \
+        last_name in names:
+        offset = names.index(last_name)
     else:
         offset = 0
 
-    # Should be 31
-    for x in range(31):
-        yield str(nevek[( x + offset) % len (nevek)])
+    # Should be 31 at most
+    for char in range(31):
+        yield str(names[(char + offset) % len(names)])
 
     # FIXME to circumvent iteration errors
-    for x in range(100):
+    for char in range(100):
         yield "-"
 
-c = calendar.HTMLCalendar(calendar.MONDAY)
-n = get_next_name()
+def main():
+    """High level module of the code"""
+    # TODO nevek should be taken from argv
+    nevek = [line.rstrip('\n') for line in open('nevek.txt')]
 
-htmlStr = c.formatmonth(2018, 1)
-# print(str)
+    last_name_of_last_month = None
 
-htmlStr = htmlStr.replace("&nbsp;"," ")
+    # TODO last_name_of_last_month should be take from argv
+    if len(sys.argv) > 1:
+        last_name_of_last_month = sys.argv[1]
 
-root = etree.fromstring(htmlStr)
-for elem in root.findall("*//td"):
-    # if elem.get("class") != "tue":
-    #     continue
-    # elem.text += "!"
+    fruit_calendar = calendar.HTMLCalendar(calendar.MONDAY)
+    next_names = get_next_name(nevek, last_name_of_last_month)
 
-    br = etree.SubElement(elem, "br")
-    br.tail = n.next()
-    print (elem.text + str(br.tail))
+    html_str = fruit_calendar.formatmonth(2018, 1)
+    # print(str)
 
-print etree.tostring(root, encoding='utf-8')
+    html_str = html_str.replace("&nbsp;", " ")
+
+    root = etree.fromstring(html_str)
+    for elem in root.findall("*//td"):
+        # if elem.get("class") != "tue":
+        #     continue
+        # elem.text += "!"
+
+        br = etree.SubElement(elem, "br")
+        br.tail = next(next_names)
+        # print(elem.text + str(br.tail))
+
+    print(etree.tostring(root, encoding='utf-8'))
+
+if __name__ == '__main__':
+    main()
