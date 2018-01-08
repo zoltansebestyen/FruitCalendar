@@ -7,6 +7,8 @@ import xml.etree.ElementTree as etree
 import sys
 import locale
 
+# Super hack to get full names in HTML calendar
+calendar.day_abbr = calendar.day_name
 
 NO_NAME_LABEL="-"
 
@@ -80,7 +82,6 @@ def main():
             name.attrib['class'] = 'name'
             name.text = next(next_names)
 
-            # import pdb; pdb.set_trace()
 
             # span.tail = 'day'
             # next(next_names)
