@@ -94,7 +94,7 @@ def main():
 <head>
   <link rel="stylesheet" type="text/css" href="fcal.css">
   <meta charset="UTF-8">
-<title>Page Title</title>
+<title>Gyümölcsnaptár</title>
 </head>
 <body>""")
     sys.stdout.flush()
