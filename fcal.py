@@ -62,6 +62,8 @@ def main():
     html_str = html_str.replace("&nbsp;", " ")
 
     root = etree.fromstring(html_str)
+    # {'class': 'month'}
+    root.attrib = {k:v for (k,v) in root.attrib.items() if k == 'class'}
 
     for elem in root.findall("tr"):
         children = elem.getchildren()
