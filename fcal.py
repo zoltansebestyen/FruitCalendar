@@ -47,6 +47,10 @@ def main():
         last_name_of_last_month = sys.argv[1]
 
     loc = locale.getlocale() # get current locale
+
+    # TODO subclass it or rewrite it at etree.xml
+    # see https://stackoverflow.com/questions/3843800/python-replacing-method-in-calendar-module
+    # https://stackoverflow.com/questions/1101524/python-calendar-htmlcalendar
     fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
     next_names = get_next_name(nevek, last_name_of_last_month)
 
@@ -67,8 +71,19 @@ def main():
 
     for elem in root.findall("*//td"):
         if elem.get('class') != 'noday':
-            br = etree.SubElement(elem, "br")
-            br.tail = next(next_names)
+            dayno = etree.SubElement(elem, "span")
+            dayno.attrib['class'] = 'day'
+            dayno.text = elem.text
+            elem.text = ''
+
+            name = etree.SubElement(elem, "span")
+            name.attrib['class'] = 'name'
+            name.text = next(next_names)
+
+            # import pdb; pdb.set_trace()
+
+            # span.tail = 'day'
+            # next(next_names)
 
     sys.stdout.write(
 """<!DOCTYPE html>

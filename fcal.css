@@ -1,57 +1,50 @@
-/* table, th, td {
-   border: 1px solid grey;
+body {
+  font: 16px Tahoma;
 }
 
+h1 {
+  width: 800px;
+  text-align: center;
+  font-size: 30px;
+}
+
+table, th, td {
+  border: 1px solid #999;
+  padding: 5px 10px;
+}
 table {
-  table-layout: fixed
+  border-collapse: collapse;
+  width: 800px;
+}
+td, th {
+  width: 100px;
+}
+
+th {
+  height: 40px;
+  font-size: 16px;
+}
+th.mon, th.tue, th.wed, th.thu, th.fri {
+  background-color: #ddd;
+  color: #888;
 }
 
 td {
-  padding: 5;
-} */
+  height: 90px;
+  position: relative;
+}
+td .day {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-weight: bold;
+  font-size: 16px;
+  color: #bbb;
+}
+td .name {
+  display: block;
+  margin-top: 2em;
+  font-size: 15px;
+  color: #444;
+}
 
-    body {
-      line-height: 1;
-      margin: 50px;
-    }
-    div {
-      background: rgba(0, 0, 0, .1);
-      border-radius: 5px;
-      box-sizing: border-box;
-      padding: 15px;
-      width: 220px;
-    }
-    header {
-      overflow: clear;
-      position: relative;
-    }
-    h2 {
-      font-family: 'PT Sans Narrow', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      margin: 0 0 10px;
-      text-align: center;
-    }
-    table {
-      background: #fff;
-      border-collapse: collapse;
-      color: #222;
-      font-family: 'PT Sans', sans-serif;
-      font-size: 13px;
-      width: 100%;
-    }
-    td {
-      border: 1px solid #ccc;
-      color: #444;
-      line-height: 22px;
-      text-align: center;
-    }
-    tr:first-child td {
-      color: #222;
-      font-weight: 700;
-    }
-    .selected {
-      background: #f0951d;
-      border: 0;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, .5) inset;
-    }
