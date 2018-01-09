@@ -82,6 +82,15 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
     html_str = html_str.replace("&nbsp;", " ")
 
     root = etree.fromstring(html_str)
+
+    header = list(list(root)[0])[0]
+    (yearstr, monthstr) = header.text.split(" ")
+
+    if loc[0] == 'hu_HU':
+        header.text = "%s %s %s" % (calendar_title, monthstr, yearstr)
+    else:
+        header.text = "%s %s %s" % (calendar_title, yearstr, monthstr)
+
     root.attrib = {k:v for (k, v) in root.attrib.items() if k == 'class'}
 
     for elem in root.findall("tr"):
@@ -111,7 +120,12 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
   <meta charset="UTF-8">
 <title>Gyümölcsnaptár</title>
 </head>
-<body>""")
+<body>
+<div class='month'>
+<img src='train-fruits-16063547.jpg' width="260" height="94"
+     style="margin:0px auto;display:block"/>
+ </div>
+""")
     sys.stdout.flush()
     sys.stdout.buffer.write(etree.tostring(root, encoding='utf-8'))
     sys.stdout.write(
