@@ -56,7 +56,9 @@ def add_months(sourcedate, months):
               help="comma separated list of days to skip in the month")
 @click.option('--names_file', default='names.txt',
               help="File containing list of names, each one a line")
-def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
+@click.option('--calendar_title', default='Fruit Calendar')
+def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
+                   calendar_title):
     """Prints a HTML calendar to the stdout
     Sample usage:
     python3 fcal.py --month next --last_name_of_last_month 'Ari Marcell'  --days_to_skip 2,5"""
@@ -118,7 +120,7 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
 <head>
   <link rel="stylesheet" type="text/css" href="fcal.css">
   <meta charset="UTF-8">
-<title>Gyümölcsnaptár</title>
+<title>""" + calendar_title + """</title>
 </head>
 <body>
 <div class='month'>
