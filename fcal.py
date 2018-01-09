@@ -78,12 +78,10 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
         raise Exception("Only values 'current and 'next' are accepted")
 
     html_str = fruit_calendar.formatmonth(somedate.year, somedate.month)
-    # print(str)
 
     html_str = html_str.replace("&nbsp;", " ")
 
     root = etree.fromstring(html_str)
-    # {'class': 'month'}
     root.attrib = {k:v for (k, v) in root.attrib.items() if k == 'class'}
 
     for elem in root.findall("tr"):
@@ -104,10 +102,6 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
             name = etree.SubElement(elem, "span")
             name.attrib['class'] = 'name'
             name.text = next(next_names)
-
-
-            # span.tail = 'day'
-            # next(next_names)
 
     sys.stdout.write(
         """<!DOCTYPE html>
