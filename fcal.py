@@ -57,7 +57,9 @@ def add_months(sourcedate, months):
 @click.option('--names_file', default='names.txt',
               help="File containing list of names, each one a line")
 def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
-    """High level module of the code"""
+    """Prints a HTML calendar to the stdout
+    Sample usage:
+    python3 fcal.py --month next --last_name_of_last_month 'Ari Marcell'  --days_to_skip 2,5"""
     nevek = [line.rstrip('\n') for line in open(names_file)]
 
     loc = locale.getlocale() # get current locale
