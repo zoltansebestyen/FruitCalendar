@@ -6,13 +6,13 @@ import calendar
 import xml.etree.ElementTree as etree
 import sys
 import locale
-import click
 import datetime
+import click
 
 # Super hack to get full names in HTML calendar
 calendar.day_abbr = calendar.day_name
 
-NO_NAME_LABEL="-"
+NO_NAME_LABEL = "-"
 
 def get_next_name(names, last_name_used, days_to_skip, month_length=31):
     """Generates a cyclic list of names from the list given
@@ -39,8 +39,10 @@ def get_next_name(names, last_name_used, days_to_skip, month_length=31):
     for _ in range(100):
         yield NO_NAME_LABEL
 
-# from https://stackoverflow.com/questions/4130922/how-to-increment-datetime-by-custom-months-in-python-without-using-library
-def add_months(sourcedate,months):
+# from https://stackoverflow.com/questions/4130922/
+# how-to-increment-datetime-by-custom-months-in-python-without-using-library
+def add_months(sourcedate, months):
+    """Adds specified number of month to current date"""
     month = sourcedate.month - 1 + months
     year = int(sourcedate.year + month / 12)
     month = month % 12 + 1
@@ -50,24 +52,25 @@ def add_months(sourcedate,months):
 @click.command()
 @click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
 @click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
-@click.option('--days_to_skip', default=None, help="comma separated list of days to skip in the month")
-@click.option('--names_file', default='names.txt', help="File containing list of names, each one a line")
+@click.option('--days_to_skip', default=None,
+              help="comma separated list of days to skip in the month")
+@click.option('--names_file', default='names.txt',
+              help="File containing list of names, each one a line")
 def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
     """High level module of the code"""
     nevek = [line.rstrip('\n') for line in open(names_file)]
 
     loc = locale.getlocale() # get current locale
 
-    # TODO subclass it or rewrite it at etree.xml
-    # see https://stackoverflow.com/questions/3843800/python-replacing-method-in-calendar-module
-    # https://stackoverflow.com/questions/1101524/python-calendar-htmlcalendar
     fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
-    next_names = get_next_name(nevek, last_name_of_last_month, days_to_skip.split(",") if days_to_skip else None)
+    next_names = get_next_name(nevek,
+                               last_name_of_last_month,
+                               days_to_skip.split(",") if days_to_skip else None)
 
     somedate = datetime.date.today()
-    if(month == 'current'):
+    if month == 'current':
         pass
-    elif(month == 'next'):
+    elif month == 'next':
         somedate = add_months(somedate, 1)
     else:
         raise Exception("Only values 'current and 'next' are accepted")
@@ -79,7 +82,7 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
 
     root = etree.fromstring(html_str)
     # {'class': 'month'}
-    root.attrib = {k:v for (k,v) in root.attrib.items() if k == 'class'}
+    root.attrib = {k:v for (k, v) in root.attrib.items() if k == 'class'}
 
     for elem in root.findall("tr"):
         children = elem.getchildren()
@@ -105,7 +108,7 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
             # next(next_names)
 
     sys.stdout.write(
-"""<!DOCTYPE html>
+        """<!DOCTYPE html>
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="fcal.css">
@@ -116,9 +119,10 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
     sys.stdout.flush()
     sys.stdout.buffer.write(etree.tostring(root, encoding='utf-8'))
     sys.stdout.write(
-"""</body>
+        """</body>
 </html>""")
     sys.stdout.flush()
 
 if __name__ == '__main__':
+     # pylint: disable=E1101,E1120
     print_calendar()
