@@ -51,10 +51,10 @@ def add_months(sourcedate,months):
 @click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
 @click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
 @click.option('--days_to_skip', default=None, help="comma separated list of days to skip in the month")
-def print_calendar(last_name_of_last_month, month, days_to_skip):
+@click.option('--names_file', default='names.txt', help="File containing list of names, each one a line")
+def print_calendar(last_name_of_last_month, month, days_to_skip, names_file):
     """High level module of the code"""
-    # TODO nevek should be taken from argv
-    nevek = [line.rstrip('\n') for line in open('nevek.txt')]
+    nevek = [line.rstrip('\n') for line in open(names_file)]
 
     loc = locale.getlocale() # get current locale
 
