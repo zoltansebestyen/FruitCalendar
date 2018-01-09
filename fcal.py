@@ -6,6 +6,8 @@ import calendar
 import xml.etree.ElementTree as etree
 import sys
 import locale
+import click
+import datetime
 
 # Super hack to get full names in HTML calendar
 calendar.day_abbr = calendar.day_name
@@ -17,7 +19,7 @@ def get_next_name(names, last_name_used, day_offset=0, month_length=31):
         names: list of names to generate
         last_name_used: last name used last month, we'll skip names until this one
     """
-    if last_name_used is not None:
+    if last_name_used is not None and last_name_used != '':
         if last_name_used in names:
             name_offset = names.index(last_name_used)
         else:
@@ -37,16 +39,21 @@ def get_next_name(names, last_name_used, day_offset=0, month_length=31):
     for _ in range(100):
         yield NO_NAME_LABEL
 
-def main():
+# from https://stackoverflow.com/questions/4130922/how-to-increment-datetime-by-custom-months-in-python-without-using-library
+def add_months(sourcedate,months):
+    month = sourcedate.month - 1 + months
+    year = int(sourcedate.year + month / 12)
+    month = month % 12 + 1
+    day = min(sourcedate.day, calendar.monthrange(year, month)[1])
+    return datetime.date(year, month, day)
+
+@click.command()
+@click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
+@click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
+def print_calendar(last_name_of_last_month, month):
     """High level module of the code"""
     # TODO nevek should be taken from argv
     nevek = [line.rstrip('\n') for line in open('nevek.txt')]
-
-    last_name_of_last_month = None
-
-    # TODO last_name_of_last_month should be take from argv
-    if len(sys.argv) > 1:
-        last_name_of_last_month = sys.argv[1]
 
     loc = locale.getlocale() # get current locale
 
@@ -56,7 +63,15 @@ def main():
     fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
     next_names = get_next_name(nevek, last_name_of_last_month)
 
-    html_str = fruit_calendar.formatmonth(2018, 1)
+    somedate = datetime.date.today()
+    if(month == 'current'):
+        pass
+    elif(month == 'next'):
+        somedate = add_months(somedate, 1)
+    else:
+        raise Exception("Only values 'current and 'next' are accepted")
+
+    html_str = fruit_calendar.formatmonth(somedate.year, somedate.month)
     # print(str)
 
     html_str = html_str.replace("&nbsp;", " ")
@@ -105,4 +120,4 @@ def main():
     sys.stdout.flush()
 
 if __name__ == '__main__':
-    main()
+    print_calendar()
