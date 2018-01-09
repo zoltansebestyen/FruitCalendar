@@ -14,7 +14,7 @@ calendar.day_abbr = calendar.day_name
 
 NO_NAME_LABEL="-"
 
-def get_next_name(names, last_name_used, day_offset=0, month_length=31):
+def get_next_name(names, last_name_used, days_to_skip, month_length=31):
     """Generates a cyclic list of names from the list given
         names: list of names to generate
         last_name_used: last name used last month, we'll skip names until this one
@@ -28,12 +28,12 @@ def get_next_name(names, last_name_used, day_offset=0, month_length=31):
         name_offset = 0
 
     # Skip first day_offset days if needed
-    for _ in range(day_offset):
-        yield NO_NAME_LABEL
-
     # Generate list of names
-    for position in range(month_length - day_offset):
-        yield str(names[(position + name_offset) % len(names)])
+    for position in range(month_length):
+        if days_to_skip and  str(position) in days_to_skip:
+            yield NO_NAME_LABEL
+        else:
+            yield str(names[(position + name_offset) % len(names)])
 
     # Fill in the first few days of the next month
     for _ in range(100):
@@ -50,7 +50,8 @@ def add_months(sourcedate,months):
 @click.command()
 @click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
 @click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
-def print_calendar(last_name_of_last_month, month):
+@click.option('--days_to_skip', default=None, help="comma separated list of days to skip in the month")
+def print_calendar(last_name_of_last_month, month, days_to_skip):
     """High level module of the code"""
     # TODO nevek should be taken from argv
     nevek = [line.rstrip('\n') for line in open('nevek.txt')]
@@ -61,7 +62,7 @@ def print_calendar(last_name_of_last_month, month):
     # see https://stackoverflow.com/questions/3843800/python-replacing-method-in-calendar-module
     # https://stackoverflow.com/questions/1101524/python-calendar-htmlcalendar
     fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
-    next_names = get_next_name(nevek, last_name_of_last_month)
+    next_names = get_next_name(nevek, last_name_of_last_month, days_to_skip.split(",") if days_to_skip else None)
 
     somedate = datetime.date.today()
     if(month == 'current'):
