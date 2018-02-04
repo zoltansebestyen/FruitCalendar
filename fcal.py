@@ -21,7 +21,7 @@ def get_next_name(names, last_name_used, days_to_skip, month_length=31):
     """
     if last_name_used is not None and last_name_used != '':
         if last_name_used in names:
-            name_offset = names.index(last_name_used)
+            name_offset = (names.index(last_name_used) + 1) % len(names)
         else:
             raise Exception("No such name %s" % last_name_used)
     else:
