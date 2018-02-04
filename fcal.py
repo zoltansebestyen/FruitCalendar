@@ -56,7 +56,8 @@ def add_months(sourcedate, months):
               help="comma separated list of days to skip in the month")
 @click.option('--names_file', default='names.txt',
               help="File containing list of names, each one a line")
-@click.option('--calendar_title', default='Fruit Calendar')
+@click.option('--calendar_title', default='Fruit Calendar',
+              help='alternate title of the calendar')
 def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
                    calendar_title):
     """Prints a HTML calendar to the stdout
@@ -136,5 +137,7 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
     sys.stdout.flush()
 
 if __name__ == '__main__':
+    if(len(sys.argv) == 1):
+        sys.argv.append('--help')
      # pylint: disable=E1101,E1120
     print_calendar()
