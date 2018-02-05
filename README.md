@@ -13,3 +13,10 @@ depending on when you generate it (before end of month or after).
 Also, you're supposed to tell the last name used for the previous calendar so
 that this tool can continue with the next one.
 But just run 'fcal.py --help for' the actual list of options.
+
+Here's an example to generate a fruit calendar:
+
+```
+./fcal.py --month current --names_file names.txt --last_name_of_last_month \
+"Frodo Gamgee" --calendar_title "Fruit Calendar" > 2018-feb.html
+```
