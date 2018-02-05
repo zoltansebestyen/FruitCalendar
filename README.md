@@ -1,0 +1,15 @@
+This little tool aims to generate a printable 'Fruit Calendar'
+with the name of a member of the group for each work day.
+
+Essentially it's a rota calendar generator for kindergarten and because of that,
+it's rather static: does not store the rota in a database and supposed to run
+once a month.
+
+Usage:
+You have to have a file with the list of names (separated by newline)
+to fill the calendar with.
+You can specify which month's calendar you want: current or next,
+depending on when you generate it (before end of month or after).
+Also, you're supposed to tell the last name used for the previous calendar so
+that this tool can continue with the next one.
+But just run 'fcal.py --help for' the actual list of options.
