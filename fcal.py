@@ -52,16 +52,18 @@ def add_months(sourcedate, months):
 @click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
 @click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
 @click.option('--days_to_skip', 'days_to_skip_str', default=None,
-              help="comma separated list of days to skip in the month")
+              help="comma separated list of days to skip in the calendar")
+@click.option('--saturdays_to_include', 'saturdays_to_include_str', default=None,
+              help="comma separated list of saturdays to include in the calendar")
 @click.option('--names_file', default='names.txt',
               help="File containing list of names, each one a line")
 @click.option('--calendar_title', default='Fruit Calendar',
               help='alternate title of the calendar')
 @click.option('--output_file', default='fcal-test.html',
               help='file to generate the calendar into')
-
-def print_calendar(last_name_of_last_month, month, days_to_skip_str, names_file,
-                   calendar_title, output_file):
+def print_calendar(last_name_of_last_month, month, days_to_skip_str,
+                   saturdays_to_include_str, names_file, calendar_title,
+                   output_file):
     """Prints a HTML calendar to the stdout
     Sample usage:
     python3 fcal.py --month next --last_name_of_last_month 'Ari Marcell'  --days_to_skip 2,5"""
@@ -73,6 +75,7 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str, names_file,
     next_names = get_next_name(nevek,
                                last_name_of_last_month)
     days_to_skip = days_to_skip_str.split(",") if days_to_skip_str else None
+    saturdays_to_include = saturdays_to_include_str.split(",") if saturdays_to_include_str else None
 
     somedate = datetime.date.today()
     if month == 'current':
@@ -104,18 +107,27 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str, names_file,
             continue
 
         elem.remove(children[calendar.SUNDAY])
-        elem.remove(children[calendar.SATURDAY])
+        if not saturdays_to_include:
+            elem.remove(children[calendar.SATURDAY])
 
     for elem in root.findall("*//td"):
         if elem.get('class') != 'noday':
-            dayno = etree.SubElement(elem, "span")
-            dayno.attrib['class'] = 'day'
-            dayno.text = elem.text
+            dayno = elem.text
+            day_elem = etree.SubElement(elem, "span")
+            day_elem.attrib['class'] = 'day'
+            day_elem.text = dayno
             elem.text = ''
 
             name = etree.SubElement(elem, "span")
             name.attrib['class'] = 'name'
-            if days_to_skip and dayno.text in days_to_skip:
+
+            is_saturday = datetime.datetime(somedate.year,
+                                            somedate.month,
+                                            int(dayno)).weekday() == 5
+
+            if ((days_to_skip and dayno in days_to_skip) or
+                (is_saturday and saturdays_to_include and
+                 dayno not in saturdays_to_include)):
                 name.text = NO_NAME_LABEL
             else:
                 name.text = next(next_names)

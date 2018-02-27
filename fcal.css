@@ -27,7 +27,7 @@ th {
   height: 40px;
   font-size: 16px;
 }
-th.mon, th.tue, th.wed, th.thu, th.fri {
+th.mon, th.tue, th.wed, th.thu, th.fri, th.sat {
   background-color: #ddd;
   color: #888;
 }

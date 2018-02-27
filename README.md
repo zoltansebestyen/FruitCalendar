@@ -20,3 +20,12 @@ Here's an example to generate a fruit calendar:
 ./fcal.py --month current --names_file names.txt --last_name_of_last_month \
 "Frodo Gamgee" --calendar_title "Fruit Calendar" > 2018-feb.html
 ```
+
+Optionally you can skip selected days from the calendar ( a dash will be
+inserted for that date ) and add working Saturdays to the calendar:
+
+```
+./fcal.py --month current --names_file names.txt --last_name_of_last_month \
+"Frodo Gamgee" --calendar_title "Fruit Calendar" \
+--days_to_skip 15,16 --saturdays_to_include 10 > 2018-feb.html
+```
