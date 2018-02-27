@@ -8,6 +8,9 @@ import sys
 import locale
 import datetime
 import click
+import os
+
+import jinja2
 
 # Super hack to get full names in HTML calendar
 calendar.day_abbr = calendar.day_name
@@ -58,8 +61,11 @@ def add_months(sourcedate, months):
               help="File containing list of names, each one a line")
 @click.option('--calendar_title', default='Fruit Calendar',
               help='alternate title of the calendar')
+@click.option('--output_file', default='fcal-test.html',
+              help='file to generate the calendar into')
+
 def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
-                   calendar_title):
+                   calendar_title, output_file):
     """Prints a HTML calendar to the stdout
     Sample usage:
     python3 fcal.py --month next --last_name_of_last_month 'Ari Marcell'  --days_to_skip 2,5"""
@@ -115,26 +121,21 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
             name.attrib['class'] = 'name'
             name.text = next(next_names)
 
-    sys.stdout.write(
-        """<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" type="text/css" href="fcal.css">
-  <meta charset="UTF-8">
-<title>""" + calendar_title + """</title>
-</head>
-<body>
-<div class='month'>
-<img src='train-fruits-16063547.jpg' width="260" height="94"
-     style="margin:0px auto;display:block"/>
- </div>
-""")
-    sys.stdout.flush()
-    sys.stdout.buffer.write(etree.tostring(root, encoding='utf-8'))
-    sys.stdout.write(
-        """</body>
-</html>""")
-    sys.stdout.flush()
+    body = etree.tostring(root, encoding="unicode")
+    context = {
+        'calendar_title': 'calendar_title',
+        'body' : body
+    }
+
+    with open(output_file, "w") as target:
+        output = render('./fcal.html', context)
+        target.write(output)
+
+def render(tpl_path, context):
+    path, filename = os.path.split(tpl_path)
+    return jinja2.Environment(
+        loader=jinja2.FileSystemLoader(path or './')
+    ).get_template(filename).render(context)
 
 if __name__ == '__main__':
     if(len(sys.argv) == 1):
