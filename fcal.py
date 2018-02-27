@@ -17,7 +17,7 @@ calendar.day_abbr = calendar.day_name
 
 NO_NAME_LABEL = "-"
 
-def get_next_name(names, last_name_used, days_to_skip, month_length=31):
+def get_next_name(names, last_name_used, month_length=31):
     """Generates a cyclic list of names from the list given
         names: list of names to generate
         last_name_used: last name used last month, we'll skip names until this one
@@ -30,13 +30,9 @@ def get_next_name(names, last_name_used, days_to_skip, month_length=31):
     else:
         name_offset = 0
 
-    # Skip first day_offset days if needed
     # Generate list of names
     for position in range(month_length):
-        if days_to_skip and  str(position) in days_to_skip:
-            yield NO_NAME_LABEL
-        else:
-            yield str(names[(position + name_offset) % len(names)])
+        yield str(names[(position + name_offset) % len(names)])
 
     # Fill in the first few days of the next month
     for _ in range(100):
@@ -55,7 +51,7 @@ def add_months(sourcedate, months):
 @click.command()
 @click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
 @click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
-@click.option('--days_to_skip', default=None,
+@click.option('--days_to_skip', 'days_to_skip_str', default=None,
               help="comma separated list of days to skip in the month")
 @click.option('--names_file', default='names.txt',
               help="File containing list of names, each one a line")
@@ -64,7 +60,7 @@ def add_months(sourcedate, months):
 @click.option('--output_file', default='fcal-test.html',
               help='file to generate the calendar into')
 
-def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
+def print_calendar(last_name_of_last_month, month, days_to_skip_str, names_file,
                    calendar_title, output_file):
     """Prints a HTML calendar to the stdout
     Sample usage:
@@ -75,8 +71,8 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
 
     fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
     next_names = get_next_name(nevek,
-                               last_name_of_last_month,
-                               days_to_skip.split(",") if days_to_skip else None)
+                               last_name_of_last_month)
+    days_to_skip = days_to_skip_str.split(",") if days_to_skip_str else None
 
     somedate = datetime.date.today()
     if month == 'current':
@@ -119,7 +115,10 @@ def print_calendar(last_name_of_last_month, month, days_to_skip, names_file,
 
             name = etree.SubElement(elem, "span")
             name.attrib['class'] = 'name'
-            name.text = next(next_names)
+            if days_to_skip and dayno.text in days_to_skip:
+                name.text = NO_NAME_LABEL
+            else:
+                name.text = next(next_names)
 
     body = etree.tostring(root, encoding="unicode")
     context = {
