@@ -56,7 +56,7 @@ THIS_MONTH = TODAY.month
 
 def parse_days(days_list, month=THIS_MONTH):
 
-    return [
+    return {
         datetime.datetime(int(d[0]), int(d[1]), int(d[2])) if len(d) == 3
         else
         datetime.datetime(THIS_YEAR, int(d[0]), int(d[1])) if len(d) == 2
@@ -64,7 +64,7 @@ def parse_days(days_list, month=THIS_MONTH):
         datetime.datetime(THIS_YEAR, month, int(d[0])) # if len(d) == 1
         for d in
         [dstr.split('.') for dstr in days_list]
-        ]
+        }
 
 def parse_config(config_file):
     '''parses config, consisting of days'''
@@ -119,10 +119,10 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
         raise Exception("Only values 'current and 'next' are accepted")
 
     if days_to_skip_str:
-        holidays.extend(parse_days(days_to_skip_str.split(","), month=somedate.month))
+        holidays = holidays.union(parse_days(days_to_skip_str.split(","), month=somedate.month))
 
     if saturdays_to_include_str:
-        working_days.extend(parse_days(saturdays_to_include_str.split(","), month=somedate.month))
+        working_days = working_days.union(parse_days(saturdays_to_include_str.split(","), month=somedate.month))
 
     html_str = fruit_calendar.formatmonth(somedate.year, somedate.month)
 
