@@ -109,22 +109,22 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
                                last_name_of_last_month)
 
     # TODO find a better name, like reference_date
-    somedate = TODAY
+    reference_date = TODAY
 
     if month == 'current':
         pass
     elif month == 'next':
-        somedate = add_months(TODAY, 1)
+        reference_date = add_months(TODAY, 1)
     else:
         raise Exception("Only values 'current and 'next' are accepted")
 
     if days_to_skip_str:
-        holidays = holidays.union(parse_days(days_to_skip_str.split(","), month=somedate.month))
+        holidays = holidays.union(parse_days(days_to_skip_str.split(","), month=reference_date.month))
 
     if saturdays_to_include_str:
-        working_days = working_days.union(parse_days(saturdays_to_include_str.split(","), month=somedate.month))
+        working_days = working_days.union(parse_days(saturdays_to_include_str.split(","), month=reference_date.month))
 
-    html_str = fruit_calendar.formatmonth(somedate.year, somedate.month)
+    html_str = fruit_calendar.formatmonth(reference_date.year, reference_date.month)
 
     html_str = html_str.replace("&nbsp;", " ")
 
@@ -158,8 +158,8 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
             name = etree.SubElement(elem, "span")
             name.attrib['class'] = 'name'
 
-            day = datetime.datetime(somedate.year,
-                                    somedate.month,
+            day = datetime.datetime(reference_date.year,
+                                    reference_date.month,
                                     int(dayno))
 
             is_saturday = day.weekday() == 5
@@ -167,7 +167,8 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
             if ((day in holidays) or
                     (is_saturday and
                      day not in working_days)):
-                name.text = NO_NAME_LABEL
+                name.text = ""
+                elem.set('class', 'crossed')
             else:
                 name.text = next(next_names)
 

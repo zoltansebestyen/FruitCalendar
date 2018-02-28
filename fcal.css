@@ -50,3 +50,7 @@ td .name {
   font-size: 15px;
   color: #444;
 }
+td.crossed
+{
+   background-image: linear-gradient(to bottom left,  transparent calc(50% - 1px), red, transparent calc(50% + 1px));
+}
