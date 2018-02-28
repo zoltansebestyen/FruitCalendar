@@ -12,6 +12,8 @@ import os
 
 import jinja2
 
+import yaml
+
 # Super hack to get full names in HTML calendar
 calendar.day_abbr = calendar.day_name
 
@@ -48,6 +50,31 @@ def add_months(sourcedate, months):
     day = min(sourcedate.day, calendar.monthrange(year, month)[1])
     return datetime.date(year, month, day)
 
+TODAY = datetime.date.today()
+THIS_YEAR = TODAY.year
+THIS_MONTH = TODAY.month
+
+def parse_days(days_list, month=THIS_MONTH):
+
+    return [
+        datetime.datetime(int(d[0]), int(d[1]), int(d[2])) if len(d) == 3
+        else
+        datetime.datetime(THIS_YEAR, int(d[0]), int(d[1])) if len(d) == 2
+        else
+        datetime.datetime(THIS_YEAR, month, int(d[0])) # if len(d) == 1
+        for d in
+        [dstr.split('.') for dstr in days_list]
+        ]
+
+def parse_config(config_file):
+    '''parses config, consisting of days'''
+    with open(config_file, 'r') as s:
+        config = yaml.load(s)
+
+    retval = (parse_days(config['holidays']), parse_days(config['working_days']))
+    return retval
+
+
 @click.command()
 @click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
 @click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
@@ -61,29 +88,41 @@ def add_months(sourcedate, months):
               help='alternate title of the calendar')
 @click.option('--output_file', default='fcal-test.html',
               help='file to generate the calendar into')
+@click.option('--config', 'config_file', default='fcal.yaml',
+              help='path to fcal config file, storing holidays')
 def print_calendar(last_name_of_last_month, month, days_to_skip_str,
                    saturdays_to_include_str, names_file, calendar_title,
-                   output_file):
+                   output_file, config_file):
     """Prints a HTML calendar to the stdout
     Sample usage:
     python3 fcal.py --month next --last_name_of_last_month 'Ari Marcell'  --days_to_skip 2,5"""
+
+    # Setup data
     nevek = [line.rstrip('\n') for line in open(names_file)]
+
+    holidays, working_days = parse_config(config_file)
 
     loc = locale.getlocale() # get current locale
 
     fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
     next_names = get_next_name(nevek,
                                last_name_of_last_month)
-    days_to_skip = days_to_skip_str.split(",") if days_to_skip_str else None
-    saturdays_to_include = saturdays_to_include_str.split(",") if saturdays_to_include_str else None
 
-    somedate = datetime.date.today()
+    # TODO find a better name, like reference_date
+    somedate = TODAY
+
     if month == 'current':
         pass
     elif month == 'next':
-        somedate = add_months(somedate, 1)
+        somedate = add_months(TODAY, 1)
     else:
         raise Exception("Only values 'current and 'next' are accepted")
+
+    if days_to_skip_str:
+        holidays.extend(parse_days(days_to_skip_str.split(","), month=somedate.month))
+
+    if saturdays_to_include_str:
+        working_days.extend(parse_days(saturdays_to_include_str.split(","), month=somedate.month))
 
     html_str = fruit_calendar.formatmonth(somedate.year, somedate.month)
 
@@ -107,8 +146,6 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
             continue
 
         elem.remove(children[calendar.SUNDAY])
-        if not saturdays_to_include:
-            elem.remove(children[calendar.SATURDAY])
 
     for elem in root.findall("*//td"):
         if elem.get('class') != 'noday':
@@ -121,13 +158,15 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
             name = etree.SubElement(elem, "span")
             name.attrib['class'] = 'name'
 
-            is_saturday = datetime.datetime(somedate.year,
-                                            somedate.month,
-                                            int(dayno)).weekday() == 5
+            day = datetime.datetime(somedate.year,
+                                    somedate.month,
+                                    int(dayno))
 
-            if ((days_to_skip and dayno in days_to_skip) or
-                (is_saturday and saturdays_to_include and
-                 dayno not in saturdays_to_include)):
+            is_saturday = day.weekday() == 5
+
+            if ((day in holidays) or
+                    (is_saturday and
+                     day not in working_days)):
                 name.text = NO_NAME_LABEL
             else:
                 name.text = next(next_names)
