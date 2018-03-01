@@ -7,10 +7,11 @@ import xml.etree.ElementTree as etree
 import sys
 import locale
 import datetime
-import click
 import os
 
+import click
 import jinja2
+import yaml
 
 # Super hack to get full names in HTML calendar
 calendar.day_abbr = calendar.day_name
@@ -48,6 +49,48 @@ def add_months(sourcedate, months):
     day = min(sourcedate.day, calendar.monthrange(year, month)[1])
     return datetime.date(year, month, day)
 
+TODAY = datetime.date.today()
+THIS_YEAR = TODAY.year
+THIS_MONTH = TODAY.month
+
+def parse_days(days, month=THIS_MONTH):
+    '''Parse string represantations of days into datetime objects
+    while keeping the data structure'''
+
+    retval = {
+        (datetime.datetime(int(d[0]), int(d[1]), int(d[2])) if len(d) == 3
+         else
+         datetime.datetime(THIS_YEAR, int(d[0]), int(d[1])) if len(d) == 2
+         else
+         datetime.datetime(THIS_YEAR, month, int(d[0])) # if len(d) == 1
+        ):desc
+        for d, desc in
+        [(day_str.split('.'), desc) for day_str, desc in days.items()]
+        }
+    return retval
+
+def parse_config(config_file):
+    '''parses config, consisting of days'''
+    with open(config_file, 'r') as stream:
+        config = yaml.load(stream)
+
+    retval = (parse_days(config['holidays']),
+              parse_days(list_to_hash(config['working_days'])))
+    return retval
+
+def list_to_hash(day_list):
+    '''Helper to make working_days to be parsed by parse_days'''
+    return {d: "" for d in day_list}
+
+def merge_into_dict(target, source):
+    '''Merge source into target, but keep target values for intersection'''
+    for key, value in source.items():
+        if key not in target.keys():
+            target[key] = value
+
+
+
+
 @click.command()
 @click.option('--last_name_of_last_month', default=None, help='Where from continue the list')
 @click.option('--month', default='next', help="Which month to print, can be 'current' or 'next'")
@@ -61,31 +104,52 @@ def add_months(sourcedate, months):
               help='alternate title of the calendar')
 @click.option('--output_file', default='fcal-test.html',
               help='file to generate the calendar into')
+@click.option('--config', 'config_file', default='fcal.yaml',
+              help='path to fcal config file, storing holidays')
 def print_calendar(last_name_of_last_month, month, days_to_skip_str,
                    saturdays_to_include_str, names_file, calendar_title,
-                   output_file):
+                   output_file, config_file):
     """Prints a HTML calendar to the stdout
     Sample usage:
     python3 fcal.py --month next --last_name_of_last_month 'Ari Marcell'  --days_to_skip 2,5"""
+
+    # Setup data
     nevek = [line.rstrip('\n') for line in open(names_file)]
+
+    holidays, working_days = parse_config(config_file)
 
     loc = locale.getlocale() # get current locale
 
     fruit_calendar = calendar.LocaleHTMLCalendar(calendar.MONDAY, loc)
     next_names = get_next_name(nevek,
                                last_name_of_last_month)
-    days_to_skip = days_to_skip_str.split(",") if days_to_skip_str else None
-    saturdays_to_include = saturdays_to_include_str.split(",") if saturdays_to_include_str else None
 
-    somedate = datetime.date.today()
+    reference_date = TODAY
+
     if month == 'current':
         pass
     elif month == 'next':
-        somedate = add_months(somedate, 1)
+        reference_date = add_months(TODAY, 1)
     else:
         raise Exception("Only values 'current and 'next' are accepted")
 
-    html_str = fruit_calendar.formatmonth(somedate.year, somedate.month)
+    if days_to_skip_str:
+        merge_into_dict(
+            holidays,
+            parse_days(
+                list_to_hash(days_to_skip_str.split(",")),
+                month=reference_date.month)
+            )
+
+    if saturdays_to_include_str:
+        merge_into_dict(
+            working_days,
+            parse_days(
+                list_to_hash(saturdays_to_include_str.split(",")),
+                month=reference_date.month)
+            )
+
+    html_str = fruit_calendar.formatmonth(reference_date.year, reference_date.month)
 
     html_str = html_str.replace("&nbsp;", " ")
 
@@ -107,8 +171,6 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
             continue
 
         elem.remove(children[calendar.SUNDAY])
-        if not saturdays_to_include:
-            elem.remove(children[calendar.SATURDAY])
 
     for elem in root.findall("*//td"):
         if elem.get('class') != 'noday':
@@ -121,14 +183,19 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
             name = etree.SubElement(elem, "span")
             name.attrib['class'] = 'name'
 
-            is_saturday = datetime.datetime(somedate.year,
-                                            somedate.month,
-                                            int(dayno)).weekday() == 5
+            day = datetime.datetime(reference_date.year,
+                                    reference_date.month,
+                                    int(dayno))
 
-            if ((days_to_skip and dayno in days_to_skip) or
-                (is_saturday and saturdays_to_include and
-                 dayno not in saturdays_to_include)):
-                name.text = NO_NAME_LABEL
+            is_saturday = day.weekday() == 5
+
+            if day in holidays.keys():
+                name.text = holidays[day]
+                elem.set('class', 'holiday')
+            elif (is_saturday and
+                  day not in working_days.keys()):
+                name.text = ""
+                elem.set('class', 'holiday')
             else:
                 name.text = next(next_names)
 
@@ -143,13 +210,14 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
         target.write(output)
 
 def render(tpl_path, context):
+    '''Inserts calendar into html via jinja2'''
     path, filename = os.path.split(tpl_path)
     return jinja2.Environment(
         loader=jinja2.FileSystemLoader(path or './')
     ).get_template(filename).render(context)
 
 if __name__ == '__main__':
-    if(len(sys.argv) == 1):
+    if len(sys.argv) == 1:
         sys.argv.append('--help')
      # pylint: disable=E1101,E1120
     print_calendar()

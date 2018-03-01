@@ -31,7 +31,6 @@ th.mon, th.tue, th.wed, th.thu, th.fri, th.sat {
   background-color: #ddd;
   color: #888;
 }
-
 td {
   height: 90px;
   position: relative;
@@ -43,6 +42,10 @@ td .day {
   font-weight: bold;
   font-size: 16px;
   color: #bbb;
+}
+td.holiday {
+  background-color: #ddd;
+  color: #888;
 }
 td .name {
   display: block;
