@@ -7,11 +7,10 @@ import xml.etree.ElementTree as etree
 import sys
 import locale
 import datetime
-import click
 import os
 
+import click
 import jinja2
-
 import yaml
 
 # Super hack to get full names in HTML calendar
@@ -54,25 +53,42 @@ TODAY = datetime.date.today()
 THIS_YEAR = TODAY.year
 THIS_MONTH = TODAY.month
 
-def parse_days(days_list, month=THIS_MONTH):
+def parse_days(days, month=THIS_MONTH):
+    '''Parse string represantations of days into datetime objects
+    while keeping the data structure'''
 
-    return {
-        datetime.datetime(int(d[0]), int(d[1]), int(d[2])) if len(d) == 3
-        else
-        datetime.datetime(THIS_YEAR, int(d[0]), int(d[1])) if len(d) == 2
-        else
-        datetime.datetime(THIS_YEAR, month, int(d[0])) # if len(d) == 1
-        for d in
-        [dstr.split('.') for dstr in days_list]
+    retval = {
+        (datetime.datetime(int(d[0]), int(d[1]), int(d[2])) if len(d) == 3
+         else
+         datetime.datetime(THIS_YEAR, int(d[0]), int(d[1])) if len(d) == 2
+         else
+         datetime.datetime(THIS_YEAR, month, int(d[0])) # if len(d) == 1
+        ):desc
+        for d, desc in
+        [(day_str.split('.'), desc) for day_str, desc in days.items()]
         }
+    return retval
 
 def parse_config(config_file):
     '''parses config, consisting of days'''
-    with open(config_file, 'r') as s:
-        config = yaml.load(s)
+    with open(config_file, 'r') as stream:
+        config = yaml.load(stream)
 
-    retval = (parse_days(config['holidays']), parse_days(config['working_days']))
+    retval = (parse_days(config['holidays']),
+              parse_days(list_to_hash(config['working_days'])))
     return retval
+
+def list_to_hash(day_list):
+    '''Helper to make working_days to be parsed by parse_days'''
+    return {d: "" for d in day_list}
+
+def merge_into_dict(target, source):
+    '''Merge source into target, but keep target values for intersection'''
+    for key, value in source.items():
+        if key not in target.keys():
+            target[key] = value
+
+
 
 
 @click.command()
@@ -108,7 +124,6 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
     next_names = get_next_name(nevek,
                                last_name_of_last_month)
 
-    # TODO find a better name, like reference_date
     reference_date = TODAY
 
     if month == 'current':
@@ -119,10 +134,20 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
         raise Exception("Only values 'current and 'next' are accepted")
 
     if days_to_skip_str:
-        holidays = holidays.union(parse_days(days_to_skip_str.split(","), month=reference_date.month))
+        merge_into_dict(
+            holidays,
+            parse_days(
+                list_to_hash(days_to_skip_str.split(",")),
+                month=reference_date.month)
+            )
 
     if saturdays_to_include_str:
-        working_days = working_days.union(parse_days(saturdays_to_include_str.split(","), month=reference_date.month))
+        merge_into_dict(
+            working_days,
+            parse_days(
+                list_to_hash(saturdays_to_include_str.split(",")),
+                month=reference_date.month)
+            )
 
     html_str = fruit_calendar.formatmonth(reference_date.year, reference_date.month)
 
@@ -164,9 +189,11 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
 
             is_saturday = day.weekday() == 5
 
-            if ((day in holidays) or
-                    (is_saturday and
-                     day not in working_days)):
+            if day in holidays.keys():
+                name.text = holidays[day]
+                elem.set('class', 'holiday')
+            elif (is_saturday and
+                  day not in working_days.keys()):
                 name.text = ""
                 elem.set('class', 'holiday')
             else:
@@ -183,13 +210,14 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
         target.write(output)
 
 def render(tpl_path, context):
+    '''Inserts calendar into html via jinja2'''
     path, filename = os.path.split(tpl_path)
     return jinja2.Environment(
         loader=jinja2.FileSystemLoader(path or './')
     ).get_template(filename).render(context)
 
 if __name__ == '__main__':
-    if(len(sys.argv) == 1):
+    if len(sys.argv) == 1:
         sys.argv.append('--help')
      # pylint: disable=E1101,E1120
     print_calendar()
