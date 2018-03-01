@@ -31,7 +31,6 @@ th.mon, th.tue, th.wed, th.thu, th.fri, th.sat {
   background-color: #ddd;
   color: #888;
 }
-
 td {
   height: 90px;
   position: relative;
@@ -44,13 +43,13 @@ td .day {
   font-size: 16px;
   color: #bbb;
 }
+td.holiday {
+  background-color: #ddd;
+  color: #888;
+}
 td .name {
   display: block;
   margin-top: 2em;
   font-size: 15px;
   color: #444;
-}
-td.crossed
-{
-   background-image: linear-gradient(to bottom left,  transparent calc(50% - 1px), red, transparent calc(50% + 1px));
 }

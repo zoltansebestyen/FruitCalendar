@@ -168,7 +168,7 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
                     (is_saturday and
                      day not in working_days)):
                 name.text = ""
-                elem.set('class', 'crossed')
+                elem.set('class', 'holiday')
             else:
                 name.text = next(next_names)
 
