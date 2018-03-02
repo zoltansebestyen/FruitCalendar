@@ -53,21 +53,22 @@ TODAY = datetime.date.today()
 THIS_YEAR = TODAY.year
 THIS_MONTH = TODAY.month
 
+def string_to_date(day_str, month):
+    '''Turns strings representation of date into datetime.datetime object'''
+    day = day_str.split('.')
+    return (
+        datetime.datetime(int(day[0]), int(day[1]), int(day[2])) if len(day) == 3
+        else
+        datetime.datetime(THIS_YEAR, int(day[0]), int(day[1])) if len(day) == 2
+        else
+        datetime.datetime(THIS_YEAR, month, int(day[0])) # if len(day) == 1
+        )
+
 def parse_days(days, month=THIS_MONTH):
     '''Parse string represantations of days into datetime objects
     while keeping the data structure'''
 
-    retval = {
-        (datetime.datetime(int(d[0]), int(d[1]), int(d[2])) if len(d) == 3
-         else
-         datetime.datetime(THIS_YEAR, int(d[0]), int(d[1])) if len(d) == 2
-         else
-         datetime.datetime(THIS_YEAR, month, int(d[0])) # if len(d) == 1
-        ):desc
-        for d, desc in
-        [(day_str.split('.'), desc) for day_str, desc in days.items()]
-        }
-    return retval
+    return {string_to_date(day_str, month):desc for day_str, desc in days.items()}
 
 def parse_config(config_file):
     '''parses config, consisting of days'''
