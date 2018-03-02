@@ -88,7 +88,12 @@ def merge_into_dict(target, source):
         if key not in target.keys():
             target[key] = value
 
-
+def render(tpl_path, context):
+    '''Inserts calendar into html via jinja2'''
+    path, filename = os.path.split(tpl_path)
+    return jinja2.Environment(
+        loader=jinja2.FileSystemLoader(path or './')
+    ).get_template(filename).render(context)
 
 
 @click.command()
@@ -208,13 +213,6 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
     with open(output_file, "w") as target:
         output = render('./fcal.html', context)
         target.write(output)
-
-def render(tpl_path, context):
-    '''Inserts calendar into html via jinja2'''
-    path, filename = os.path.split(tpl_path)
-    return jinja2.Environment(
-        loader=jinja2.FileSystemLoader(path or './')
-    ).get_template(filename).render(context)
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
