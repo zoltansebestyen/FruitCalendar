@@ -117,7 +117,7 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
                    output_file, config_file):
     """Prints a HTML calendar to the stdout
     Sample usage:
-    python3 fcal.py --month next --last_name_of_last_month 'Ari Marcell'  --days_to_skip 2,5"""
+    python3 fcal.py --month next --last_name_of_last_month 'Bilbo Baggins'  --days_to_skip 2,5"""
 
     # Setup data
     nevek = [line.rstrip('\n') for line in open(names_file)]
@@ -155,9 +155,9 @@ def print_calendar(last_name_of_last_month, month, days_to_skip_str,
                 month=reference_date.month)
             )
 
-    html_str = fruit_calendar.formatmonth(reference_date.year, reference_date.month)
-
-    html_str = html_str.replace("&nbsp;", " ")
+    html_str = fruit_calendar.\
+        formatmonth(reference_date.year,
+                    reference_date.month).replace("&nbsp;", " ")
 
     root = etree.fromstring(html_str)
 
